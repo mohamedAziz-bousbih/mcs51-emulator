@@ -1,0 +1,39 @@
+# CMake build trees
+build/
+build-*/
+cmake-build-*/
+out/
+
+# Compiler and linker outputs
+*.o
+*.obj
+*.a
+*.lib
+*.exe
+*.pdb
+*.ilk
+*.so
+*.dll
+
+# Assembler listings (the assembled .hex files are committed on purpose)
+*.lst
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Other toolchains and simulators
+.pio/
+*.cf
+*.vcd
+*.ghw
+
+# Editors and OS files
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db

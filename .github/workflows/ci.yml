@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  emulator:
+    name: Emulator (GCC, CTest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Unit, end-to-end and CLI tests
+        run: ctest --test-dir build --output-on-failure
+
+  sanitizers:
+    name: Emulator (AddressSanitizer + UBSan)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Some runner kernels use 32 bits of mmap randomisation, which older
+      # AddressSanitizer runtimes cannot handle; 28 bits is the classic value.
+      - name: Limit mmap randomisation for ASan
+        run: sudo sysctl -w vm.mmap_rnd_bits=28
+
+      - name: Configure
+        run: >
+          cmake -S . -B build-san -DCMAKE_BUILD_TYPE=Debug
+          "-DCMAKE_C_FLAGS=-fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer"
+
+      - name: Build
+        run: cmake --build build-san --parallel
+
+      - name: Tests under sanitizers
+        run: ctest --test-dir build-san --output-on-failure
+
+  assembler:
+    name: Assembler (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pytest
+        run: python -m pip install pytest
+
+      - name: Assembler tests (encodings, directives, committed HEX files)
+        run: python -m pytest -v
